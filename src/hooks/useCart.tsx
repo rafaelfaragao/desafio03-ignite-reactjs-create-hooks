@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, ReactNode, useContext, useState } from 'react';
 import { toast } from 'react-toastify';
 import { api } from '../services/api';
 import { Product, Stock } from '../types';
@@ -32,22 +32,6 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     return [];
   });
 
-  const prevCartRef = useRef<Product[]>();
-
-  useEffect(() => { //toda vez que for redenrizado atualiza o valor
-    prevCartRef.current = cart;
-  }) //não nada no array de dependencias para rodar toda vez que for renderizado
-
-  // como não podemos monitorar uma referencia para verificar se o valor dela é atualizado. o constAlgumacoisa.current não pode
-  // ser passado no array do useEffect
-  const cartPreviousValue = prevCartRef.current ?? cart; // na primeira render o current é falso, aí usa o valor do cart para não passar null ou undefined
-
-  useEffect(() => {
-    if(cartPreviousValue !== cart) {
-      localStorage.setItem('@RocketShoes:cart', JSON.stringify(cart))
-    }
-  }, [cart, cartPreviousValue])
-
   const addProduct = async (productId: number) => {
     try {
       const updatedCart = [...cart]; //preservando o cart, imutabilidade
@@ -77,6 +61,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       }
 
       setCart(updatedCart); //salvar as alterações do updatedCart no cart
+      localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart)) // o localstorage.setitem espera no argumento um string
 
     } catch {
       toast.error('Erro na adição do produto');
@@ -91,6 +76,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       if (productIndex >= 0) { // a função findIndex retorna o indice encontrado no array ou o valor -1 quando não encontra
         updatedCart.splice(productIndex, 1); //remover o produto na posicão index encontrada, e quantidade 1
         setCart(updatedCart);
+        localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart)) // o localstorage.setitem espera no argumento um string
       } else {
         throw Error(); //Esse throw Error encerra o try e cai no catch assim aparecendo a messagem do toast.error
       }
@@ -123,6 +109,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       if(productExists) {
         productExists.amount = amount;
         setCart(updatedCart);
+        localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart)) // o localstorage.setitem espera no argumento um string
       } else {
         throw Error();
       }
